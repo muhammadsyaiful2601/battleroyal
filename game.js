@@ -39,8 +39,8 @@ function startGame(botCount) {
   for (let i = 0; i < 26; i++) { const w = rand(60, 220), d = rand(60, 220); state.obstacles.push({ x: rand(200, 2800), z: rand(200, 2800), w, d, h: rand(40, 160) }); }
   const pSpot = randomFreeSpot(40);
   state.player = createEntity(pSpot.x, pSpot.z, true, 'Pemain');
-  state.player.weapon = WEAPONS.p92; state.player.ammoInMag = WEAPONS.p92.mag; state.player.reserveAmmo = 36;
-  for (let i = 0; i < count; i++) { const s = randomFreeSpot(40); const bot = createEntity(s.x, s.z, false, `Bot_${String(i + 1).padStart(2, '0')}`); bot.weapon = WEAPONS[['p92', 'ak47', 'shotgun'][i % 3]]; bot.ammoInMag = bot.weapon.mag; bot.reserveAmmo = bot.weapon.mag * 2; bot.skill = rand(0.55, 1.0); bot.medkits = Math.floor(rand(0, 3)); state.bots.push(bot); }
+  giveWeapon(state.player, 'p92'); state.player.slots[0].reserve += 12;
+  for (let i = 0; i < count; i++) { const s = randomFreeSpot(40); const bot = createEntity(s.x, s.z, false, `Bot_${String(i + 1).padStart(2, '0')}`); giveWeapon(bot, ['p92', 'ak47', 'shotgun'][i % 3]); bot.skill = rand(0.55, 1.0); bot.medkits = Math.floor(rand(0, 3)); state.bots.push(bot); }
   for (let i = 0; i < 70; i++) { const s = randomFreeSpot(10); state.loots.push({ x: s.x, z: s.z, type: LOOT_TYPES[Math.floor(Math.random() * LOOT_TYPES.length)] }); }
   state.zone = { cx: 1500, cz: 1500, r: 1500, targetCx: 1500, targetCz: 1500, targetR: 1500, shrinking: false, nextShrink: CFG.ZONE_INTERVAL };
   state.totalEntities = count + 1; state.aliveCount = state.totalEntities;
@@ -66,8 +66,8 @@ function setupInput() {
   window.addEventListener('mouseup', event => { if (event.button === 0) input.mouse.down = false; });
   window.addEventListener('contextmenu', event => event.preventDefault());
 }
-function handleKeyDown(event) { const player = state.player; if (!player || !player.alive) return; const key = event.key.toLowerCase(); if (key === 'r') reloadWeapon(player); if (key === 'e') tryPickupLoot(player); if (key === 'f') useMedkit(player); }
-function setupTouchControls() { const zone = document.getElementById('joystickZone'), base = document.getElementById('joystickBase'), knob = document.getElementById('joystickKnob'), maxRadius = 48; zone.addEventListener('touchstart', event => { event.preventDefault(); const touch = event.changedTouches[0]; input.joystick.touchId = touch.identifier; input.joystick.active = true; base.style.left = `${touch.clientX - 60}px`; base.style.top = `${touch.clientY - 60}px`; }, { passive: false }); zone.addEventListener('touchmove', event => { event.preventDefault(); for (const touch of event.changedTouches) if (touch.identifier === input.joystick.touchId) { let dx = touch.clientX - (parseFloat(base.style.left) + 60), dy = touch.clientY - (parseFloat(base.style.top) + 60); const length = Math.hypot(dx, dy); if (length > maxRadius) { dx *= maxRadius / length; dy *= maxRadius / length; } input.joystick.dx = dx / maxRadius; input.joystick.dy = dy / maxRadius; knob.style.left = `${34 + dx}px`; knob.style.top = `${34 + dy}px`; } }, { passive: false }); const end = event => { for (const touch of event.changedTouches) if (touch.identifier === input.joystick.touchId) { input.joystick.active = false; input.joystick.touchId = null; input.joystick.dx = 0; input.joystick.dy = 0; knob.style.left = '34px'; knob.style.top = '34px'; } }; zone.addEventListener('touchend', end); zone.addEventListener('touchcancel', end); const bind = (id, press, release) => { const element = document.getElementById(id); element.addEventListener('touchstart', event => { event.preventDefault(); press(); }, { passive: false }); if (release) element.addEventListener('touchend', release); }; bind('btnFire', () => { input.firePressed = true; }, () => { input.firePressed = false; }); bind('btnReload', () => reloadWeapon(state.player)); bind('btnMedkit', () => useMedkit(state.player)); bind('btnInteract', () => tryPickupLoot(state.player)); }
+function handleKeyDown(event) { const player = state.player; if (!player || !player.alive) return; const key = event.key.toLowerCase(); if (key === 'r') reloadWeapon(player); if (key === 'e') tryPickupLoot(player); if (key === 'f') useMedkit(player); if (key === '1') switchSlot(player, 0); if (key === '2') switchSlot(player, 1); if (key === '3') switchSlot(player, 2); }
+function setupTouchControls() { const zone = document.getElementById('joystickZone'), base = document.getElementById('joystickBase'), knob = document.getElementById('joystickKnob'), maxRadius = 48; zone.addEventListener('touchstart', event => { event.preventDefault(); const touch = event.changedTouches[0]; input.joystick.touchId = touch.identifier; input.joystick.active = true; base.style.left = `${touch.clientX - 60}px`; base.style.top = `${touch.clientY - 60}px`; }, { passive: false }); zone.addEventListener('touchmove', event => { event.preventDefault(); for (const touch of event.changedTouches) if (touch.identifier === input.joystick.touchId) { let dx = touch.clientX - (parseFloat(base.style.left) + 60), dy = touch.clientY - (parseFloat(base.style.top) + 60); const length = Math.hypot(dx, dy); if (length > maxRadius) { dx *= maxRadius / length; dy *= maxRadius / length; } input.joystick.dx = dx / maxRadius; input.joystick.dy = dy / maxRadius; knob.style.left = `${34 + dx}px`; knob.style.top = `${34 + dy}px`; } }, { passive: false }); const end = event => { for (const touch of event.changedTouches) if (touch.identifier === input.joystick.touchId) { input.joystick.active = false; input.joystick.touchId = null; input.joystick.dx = 0; input.joystick.dy = 0; knob.style.left = '34px'; knob.style.top = '34px'; } }; zone.addEventListener('touchend', end); zone.addEventListener('touchcancel', end); const bind = (id, press, release) => { const element = document.getElementById(id); element.addEventListener('touchstart', event => { event.preventDefault(); press(); }, { passive: false }); if (release) element.addEventListener('touchend', release); }; bind('btnFire', () => { input.firePressed = true; }, () => { input.firePressed = false; }); bind('btnJump', () => { input.keys[' '] = true; }, () => { input.keys[' '] = false; }); bind('btnReload', () => reloadWeapon(state.player)); bind('btnMedkit', () => useMedkit(state.player)); bind('btnInteract', () => tryPickupLoot(state.player)); }
 
 // Loop utama: zona, fisika, AI, kamera, render, HUD.
 function gameLoop() { requestAnimationFrame(gameLoop); if (!state.running) { renderFrame(); return; } state.frame++; updateZone(); updatePhysics(); updateAI(); updateCamera(); renderFrame(); updateHUD(); }
@@ -94,19 +94,71 @@ function updatePhysics() {
   } else { player.x += mvx; player.z += mvz; }
   player.x = clamp(player.x, 20, state.world.width - 20); player.z = clamp(player.z, 20, state.world.depth - 20);
   resolveObstacles(player);
+  // Lompat (Spasi): gravitasi sederhana di sumbu Y
+  if (input.keys[' '] && player.jumpY <= 0 && player.vJump <= 0) player.vJump = CFG.JUMP_VELOCITY;
+  if (player.vJump !== 0 || player.jumpY > 0) {
+    player.jumpY += player.vJump; player.vJump -= CFG.GRAVITY;
+    if (player.jumpY <= 0) { player.jumpY = 0; player.vJump = 0; }
+  }
   if (!isMobile) player.angle = input.yaw; else if (dx || dy) player.angle = Math.atan2(dy, dx);
   if (input.mouse.down || input.firePressed) tryShoot(player);
   for (const entity of [player, ...state.bots]) { if (entity.fireCooldown > 0) entity.fireCooldown--; applyZoneDamage(entity); }
   updateBullets();
 }
-// Membuat peluru dengan spread dari senjata aktif.
-function tryShoot(entity) { const weapon = entity.weapon; if (!weapon || entity.fireCooldown > 0) return; if (entity.ammoInMag <= 0) { reloadWeapon(entity); return; } entity.ammoInMag--; entity.fireCooldown = weapon.fireRate; const angle = entity.angle + rand(-weapon.spread, weapon.spread); state.bullets.push({ x: entity.x + Math.cos(angle) * 18, z: entity.z + Math.sin(angle) * 18, vx: Math.cos(angle) * CFG.BULLET_SPEED, vz: Math.sin(angle) * CFG.BULLET_SPEED, damage: weapon.damage, range: weapon.range, traveled: 0, life: CFG.BULLET_LIFE, owner: entity }); }
+// ---- Inventaris 3 slot senjata (tombol 1/2/3) ----
+// Menyelaraskan slot aktif dengan properti senjata aktif.
+function equipSlot(entity, index) { const slot = entity.slots[index]; if (!slot) return; entity.slotIndex = index; entity.weapon = WEAPONS[slot.key]; entity.ammoInMag = slot.mag; entity.reserveAmmo = slot.reserve; }
+// Menyimpan amunisi aktif kembali ke slot (dipanggil sebelum pindah slot).
+function saveActiveSlot(entity) { const slot = entity.slots[entity.slotIndex]; if (slot) { slot.mag = entity.ammoInMag; slot.reserve = entity.reserveAmmo; } }
+function switchSlot(entity, index) { if (!entity || !entity.slots[index] || index === entity.slotIndex) return; saveActiveSlot(entity); equipSlot(entity, index); }
+// Mengambil/mengganti senjata: isi slot kosong, atau timpa slot aktif.
+function giveWeapon(entity, type) {
+  const existing = entity.slots.findIndex(s => s && s.key === type);
+  if (existing >= 0) { entity.slots[existing].reserve += WEAPONS[type].mag; equipSlot(entity, existing); return; }
+  const slot = { key: type, mag: WEAPONS[type].mag, reserve: WEAPONS[type].mag * 2 };
+  if (entity.slots.length < 3) { entity.slots.push(slot); equipSlot(entity, entity.slots.length - 1); }
+  else { entity.slots[entity.slotIndex] = slot; equipSlot(entity, entity.slotIndex); }
+}
+
+// Menembak 3D: arah horizontal dari angle + komponen vertikal dari pitch.
+function tryShoot(entity) {
+  const weapon = entity.weapon; if (!weapon || entity.fireCooldown > 0) return;
+  if (entity.ammoInMag <= 0) { reloadWeapon(entity); return; }
+  entity.ammoInMag--; entity.fireCooldown = weapon.fireRate;
+  const angle = entity.angle + rand(-weapon.spread, weapon.spread);
+  let vy;
+  if (entity.isPlayer) { // bidikan vertikal mengikuti pitch kamera: pitch kecil = ke atas
+    vy = Math.sin(0.3 - input.pitch) * CFG.BULLET_SPEED;
+  } else { // bot membidik sejajar + sedikit noise vertikal
+    vy = rand(-0.35, 0.35);
+  }
+  const hSpeed = Math.sqrt(Math.max(1, CFG.BULLET_SPEED * CFG.BULLET_SPEED - vy * vy));
+  state.bullets.push({ x: entity.x + Math.cos(angle) * 18, z: entity.z + Math.sin(angle) * 18, y: CFG.MUZZLE_Y + entity.jumpY, vx: Math.cos(angle) * hSpeed, vz: Math.sin(angle) * hSpeed, vy, damage: weapon.damage, range: weapon.range, traveled: 0, life: CFG.BULLET_LIFE, owner: entity });
+}
 function reloadWeapon(entity) { if (!entity || !entity.weapon) return; const amount = Math.min(entity.weapon.mag - entity.ammoInMag, entity.reserveAmmo); entity.ammoInMag += amount; entity.reserveAmmo -= amount; }
 function useMedkit(entity) { if (!entity || entity.medkits <= 0 || entity.hp >= CFG.MAX_HP || entity.usingMedkit > 0) return; entity.medkits--; entity.usingMedkit = CFG.MEDKIT_USE_TIME; setTimeout(() => { if (entity.alive) entity.hp = Math.min(CFG.MAX_HP, entity.hp + CFG.MEDKIT_HEAL); }, 3000); }
-function tryPickupLoot(entity) { if (!entity) return; const index = state.loots.findIndex(loot => Math.hypot(loot.x - entity.x, loot.z - entity.z) <= CFG.PICKUP_RANGE); if (index < 0) return; const loot = state.loots[index]; if (loot.type === 'ammo') entity.reserveAmmo += 30; else if (loot.type === 'medkit') entity.medkits = Math.min(3, entity.medkits + 1); else { entity.weapon = WEAPONS[loot.type]; entity.ammoInMag = entity.weapon.mag; entity.reserveAmmo = 30; } state.loots.splice(index, 1); }
-// Peluru: maju, cek rintangan & tabrakan entitas.
-function updateBullets() { for (let index = state.bullets.length - 1; index >= 0; index--) { const bullet = state.bullets[index]; bullet.x += bullet.vx; bullet.z += bullet.vz; bullet.traveled += Math.hypot(bullet.vx, bullet.vz); bullet.life--; let remove = bullet.life <= 0 || bullet.traveled > bullet.range || !!pointInObstacle(bullet.x, bullet.z, 0); if (!remove) for (const target of [state.player, ...state.bots]) if (target.alive && target !== bullet.owner && Math.hypot(target.x - bullet.x, target.z - bullet.z) <= CFG.ENTITY_RADIUS) { target.hp -= bullet.damage * (target.armor ? 0.7 : 1); if (target.hp <= 0) killEntity(target, bullet.owner); remove = true; break; } if (remove) state.bullets.splice(index, 1); } }
-function killEntity(entity, killer) { if (!entity.alive) return; entity.alive = false; entity.hp = 0; state.aliveCount--; addKillFeed(`${entity.name} tereliminasi oleh ${killer ? killer.name : 'Zona'}`); if (entity.weapon) state.loots.push({ x: entity.x, z: entity.z, type: Object.keys(WEAPONS).find(key => WEAPONS[key] === entity.weapon) }); state.loots.push({ x: entity.x + 15, z: entity.z, type: 'medkit' }); if (entity.isPlayer) endGame(false); else if (state.aliveCount === 1 && state.player.alive) endGame(true); }
+function tryPickupLoot(entity) { if (!entity) return; const index = state.loots.findIndex(loot => Math.hypot(loot.x - entity.x, loot.z - entity.z) <= CFG.PICKUP_RANGE); if (index < 0) return; const loot = state.loots[index]; if (loot.type === 'ammo') { entity.reserveAmmo += 30; saveActiveSlot(entity); } else if (loot.type === 'medkit') entity.medkits = Math.min(3, entity.medkits + 1); else giveWeapon(entity, loot.type); state.loots.splice(index, 1); }
+// Peluru 3D: maju (x/z + tinggi y), cek rintangan (sesuai tinggi gedung) & entitas.
+function updateBullets() {
+  for (let index = state.bullets.length - 1; index >= 0; index--) {
+    const bullet = state.bullets[index];
+    bullet.x += bullet.vx; bullet.z += bullet.vz; bullet.y += bullet.vy;
+    bullet.traveled += Math.hypot(bullet.vx, bullet.vz); bullet.life--;
+    const obstacle = pointInObstacle(bullet.x, bullet.z, 0);
+    let remove = bullet.life <= 0 || bullet.traveled > bullet.range || bullet.y <= 0 || bullet.y > 400 || (obstacle && bullet.y < obstacle.h);
+    if (!remove) for (const target of [state.player, ...state.bots]) {
+      if (!target.alive || target === bullet.owner) continue;
+      const centerY = 20 + target.jumpY; // pusat tubuh target (ikut lompatan)
+      if (Math.hypot(target.x - bullet.x, target.z - bullet.z) <= CFG.ENTITY_RADIUS && Math.abs(centerY - bullet.y) <= 24) {
+        target.hp -= bullet.damage * (target.armor ? 0.7 : 1);
+        if (target.hp <= 0) killEntity(target, bullet.owner);
+        remove = true; break;
+      }
+    }
+    if (remove) state.bullets.splice(index, 1);
+  }
+}
+function killEntity(entity, killer) { if (!entity.alive) return; entity.alive = false; entity.hp = 0; state.aliveCount--; addKillFeed(`${entity.name} tereliminasi oleh ${killer ? killer.name : 'Zona'}`); for (const slot of entity.slots) if (slot) state.loots.push({ x: entity.x + rand(-10, 10), z: entity.z + rand(-10, 10), type: slot.key }); state.loots.push({ x: entity.x + 15, z: entity.z, type: 'medkit' }); if (entity.isPlayer) endGame(false); else if (state.aliveCount === 1 && state.player.alive) endGame(true); }
 // Zona aman menyusut secara berkala dan halus.
 function updateZone() { const zone = state.zone; if (!zone) return; if (!zone.shrinking && state.frame >= zone.nextShrink && zone.r > 250) { zone.targetR = zone.r * 0.65; const offset = (zone.r - zone.targetR) * 0.5; zone.targetCx = clamp(zone.cx + rand(-offset, offset), zone.targetR, state.world.width - zone.targetR); zone.targetCz = clamp(zone.cz + rand(-offset, offset), zone.targetR, state.world.depth - zone.targetR); zone.shrinking = true; zone.shrinkStart = state.frame; zone.startCx = zone.cx; zone.startCz = zone.cz; zone.startR = zone.r; } if (zone.shrinking) { const progress = Math.min(1, (state.frame - zone.shrinkStart) / CFG.ZONE_SHRINK_TIME); zone.cx = zone.startCx + (zone.targetCx - zone.startCx) * progress; zone.cz = zone.startCz + (zone.targetCz - zone.startCz) * progress; zone.r = zone.startR + (zone.targetR - zone.startR) * progress; if (progress >= 1) { zone.shrinking = false; zone.nextShrink = state.frame + CFG.ZONE_INTERVAL; } } }
 function applyZoneDamage(entity) { if (!entity.alive || !state.zone || state.frame % CFG.ZONE_DAMAGE_TICK !== 0) return; if (Math.hypot(entity.x - state.zone.cx, entity.z - state.zone.cz) > state.zone.r) { entity.hp -= CFG.ZONE_DAMAGE; if (entity.hp <= 0) killEntity(entity, null); } }
@@ -309,7 +361,7 @@ function syncBullets3D() {
     scene.add(mesh); visuals.bullets.push(mesh);
   }
   while (visuals.bullets.length > state.bullets.length) scene.remove(visuals.bullets.pop());
-  state.bullets.forEach((b, i) => visuals.bullets[i].position.set(b.x, 14, b.z));
+  state.bullets.forEach((b, i) => visuals.bullets[i].position.set(b.x, Math.max(1.5, b.y), b.z));
 }
 
 // Kamera third-person over-the-shoulder: pemain di kiri layar, bidik bebas.
@@ -330,7 +382,7 @@ function renderFrame() {
     for (const [entity, visual] of visuals.entities) {
       visual.group.visible = entity.alive;
       if (!entity.alive) continue;
-      visual.group.position.set(entity.x, 0, entity.z);
+      visual.group.position.set(entity.x, entity.jumpY, entity.z);
       // Model menghadap arah (cos a, sin a): rotasi Y sebesar -a (senjata = sumbu +x lokal)
       visual.group.rotation.y = -entity.angle;
     }
@@ -354,8 +406,36 @@ function drawMinimap() {
   for (const bot of state.bots) if (bot.alive) { mctx.fillStyle = '#e55454'; mctx.beginPath(); mctx.arc(bot.x * scale, bot.z * scale, 2.5, 0, Math.PI * 2); mctx.fill(); }
   if (state.player && state.player.alive) { mctx.fillStyle = '#4c9cff'; mctx.beginPath(); mctx.arc(state.player.x * scale, state.player.z * scale, 3.5, 0, Math.PI * 2); mctx.fill(); }
 }
-// Memperbarui teks HUD dan warna bar HP dari state permainan.
-function updateHUD() { const player = state.player; if (!player) return; document.getElementById('aliveNum').textContent = state.aliveCount; document.getElementById('totalNum').textContent = state.totalEntities; document.getElementById('hpText').textContent = `${Math.ceil(player.hp)} HP`; const fill = document.getElementById('hpBarFill'); fill.style.width = `${clamp(player.hp, 0, 100)}%`; fill.className = player.hp <= 20 ? 'low' : player.hp <= 50 ? 'medium' : ''; document.getElementById('weaponName').textContent = player.weapon ? player.weapon.name : 'Tangan Kosong'; document.getElementById('ammoText').textContent = player.weapon ? `${player.ammoInMag} / ${player.reserveAmmo}` : '- / -'; document.getElementById('medkitNum').textContent = player.medkits; }
+// Ikon senjata sederhana (SVG inline) untuk panel slot.
+function weaponIcon(key) {
+  const shapes = {
+    p92: '<rect x="3" y="8" width="18" height="5" rx="1"/><rect x="5" y="12" width="6" height="7" rx="1"/>',
+    ak47: '<rect x="1" y="8" width="26" height="4" rx="1"/><rect x="24" y="6" width="6" height="3" rx="1"/><rect x="10" y="12" width="4" height="7" rx="1"/><rect x="4" y="12" width="5" height="4" rx="1"/>',
+    shotgun: '<rect x="1" y="9" width="29" height="3" rx="1"/><rect x="1" y="12" width="29" height="3" rx="1"/><rect x="4" y="15" width="7" height="4" rx="1"/>'
+  };
+  return `<svg viewBox="0 0 32 20" class="wicon"><g fill="currentColor">${shapes[key] || shapes.p92}</g></svg>`;
+}
+// Memperbarui teks HUD, bar HP, dan panel slot senjata.
+function updateHUD() {
+  const player = state.player; if (!player) return;
+  document.getElementById('aliveNum').textContent = state.aliveCount; document.getElementById('totalNum').textContent = state.totalEntities;
+  document.getElementById('hpText').textContent = `${Math.ceil(player.hp)} HP`;
+  const fill = document.getElementById('hpBarFill'); fill.style.width = `${clamp(player.hp, 0, 100)}%`; fill.className = player.hp <= 20 ? 'low' : player.hp <= 50 ? 'medium' : '';
+  document.getElementById('weaponName').textContent = player.weapon ? player.weapon.name : 'Tangan Kosong';
+  document.getElementById('ammoText').textContent = player.weapon ? `${player.ammoInMag} / ${player.reserveAmmo}` : '- / -';
+  document.getElementById('medkitNum').textContent = player.medkits;
+  // Panel 3 slot senjata (kanan atas)
+  let html = '';
+  for (let i = 0; i < 3; i++) {
+    const slot = player.slots[i];
+    if (slot) {
+      html += `<div class="wslot ${i === player.slotIndex ? 'active' : ''}"><span class="wkey">${i + 1}</span>${weaponIcon(slot.key)}<span class="wname">${WEAPONS[slot.key].name}</span><span class="wammo">${slot.mag}/${slot.reserve}</span></div>`;
+    } else {
+      html += `<div class="wslot empty"><span class="wkey">${i + 1}</span><span class="wname">Kosong</span></div>`;
+    }
+  }
+  document.getElementById('weaponSlots').innerHTML = html;
+}
 function addKillFeed(message) { const feed = document.getElementById('killFeed'), entry = document.createElement('div'); entry.className = 'kill-entry'; entry.textContent = message; feed.prepend(entry); setTimeout(() => entry.remove(), 4000); }
 function hideOverlay(id) { document.getElementById(id).classList.add('hidden'); }
 function showOverlay(id) { document.getElementById(id).classList.remove('hidden'); }

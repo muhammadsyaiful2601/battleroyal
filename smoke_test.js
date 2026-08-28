@@ -26,6 +26,22 @@ console.log('bullets in flight:', state.bullets.length, '| obstacles:', state.ob
 console.log('zone r:', Math.round(state.zone.r));
 `;
 eval(gameCode + scenario + `
+// --- Uji fitur baru ---
+startGame(3);
+const p = state.player;
+giveWeapon(p, 'ak47'); giveWeapon(p, 'shotgun');
+console.log('slots:', p.slots.map(s => s.key).join(','), '| active:', p.weapon.name);
+const before = p.ammoInMag; p.ammoInMag = 1; saveActiveSlot(p); switchSlot(p, 0);
+console.log('switch 1-2-3 OK, slot0 ammo preserved:', p.slots[0].mag, 'active:', p.weapon.name, 'mag:', p.ammoInMag);
+input.keys[' '] = true; updatePhysics();
+console.log('jump started, vJump:', p.vJump > 0, '| y naik:', (() => { const y0 = p.jumpY; for (let i=0;i<10;i++) updatePhysics(); return p.jumpY > 0; })());
+input.keys[' '] = false;
+for (let i = 0; i < 200; i++) updatePhysics();
+console.log('mendarat kembali, jumpY =', p.jumpY);
+input.pitch = 0.08; const n0 = state.bullets.length; tryShoot(p);
+console.log('tembak ke ATAS, vy > 0:', state.bullets[state.bullets.length - 1].vy > 0);
+input.pitch = 1.0; p.fireCooldown = 0; tryShoot(p);
+console.log('tembak ke BAWAH, vy < 0:', state.bullets[state.bullets.length - 1].vy < 0);
 console.log('typeof startGame:', typeof startGame);
 console.log('typeof hideOverlay:', typeof hideOverlay);
 console.log('typeof showOverlay:', typeof showOverlay);
