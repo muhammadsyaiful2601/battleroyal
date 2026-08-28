@@ -48,6 +48,8 @@
 
     <div id="medkitInfo">MEDKIT: <span id="medkitNum">0</span></div>
 
+    <div id="grenadeInfo">GRANAT: <span id="grenadeNum">0</span> <span class="key-hint">(G)</span></div>
+
     <!-- Minimap (radar) 2D overlay — di bawah alive counter -->
     <canvas id="minimap" width="150" height="150"></canvas>
 
@@ -56,6 +58,9 @@
 
     <!-- Crosshair bidikan di tengah layar -->
     <div id="crosshair"></div>
+
+    <!-- Overlay scope sniper (tahan klik kanan saat memegang AWM) -->
+    <div id="scopeOverlay"><div class="scope-line-h"></div><div class="scope-line-v"></div></div>
 
   </div>
 
@@ -79,6 +84,7 @@
       <button id="btnJump"      class="btn-action">JUMP</button>
       <button id="btnReload"    class="btn-action">RELOAD</button>
       <button id="btnMedkit"    class="btn-action">MEDKIT</button>
+      <button id="btnGrenade"   class="btn-action">GRN</button>
       <button id="btnInteract"  class="btn-action">PICK UP</button>
     </div>
   </div>
@@ -102,7 +108,7 @@
       <strong>CARA BERMAIN (3D)</strong>
       <span>W A S D: Bergerak (relatif kamera)</span>
       <span>Klik canvas: kunci mouse &middot; gerakkan mouse untuk membidik</span>
-      <span>Klik kiri: Tembak &middot; R: Reload &middot; E: Ambil loot &middot; F: Medkit</span>
+      <span>Klik kiri: Tembak &middot; R: Reload &middot; E: Ambil loot &middot; F: Medkit &middot; G: Granat</span>
       <span>Mobile: Joystick &middot; FIRE &middot; RELOAD &middot; MEDKIT</span>
     </div>
     <label for="botCount">Jumlah Bot Musuh:</label>
@@ -111,6 +117,11 @@
       <option value="15" selected>15 Bot</option>
       <option value="20">20 Bot</option>
     </select>
+    <label for="gameMode">Mode:</label>
+    <select id="gameMode">
+      <option value="solo" selected>Solo</option>
+      <option value="squad">Squad (3 orang, ada knock &amp; revive)</option>
+    </select>
     <button id="btnStart">START GAME</button>
   </div>
 
@@ -118,6 +129,20 @@
     <h1 id="gameOverTitle">DEFEATED</h1>
     <p id="gameOverDetail"></p>
     <button id="btnRestart">MAIN LAGI</button>
+  </div>
+
+  <!-- ==========================================================
+       LOADING SCREEN
+       Ditampilkan saat tombol START diklik: memuat & merender
+       seluruh asset (model 3D GLB + shader) sebelum gameplay.
+       ========================================================== -->
+  <div id="loadingScreen" class="screen-overlay hidden">
+    <h1>MEMUAT ASSET</h1>
+    <p class="subtitle" id="loadingText">Menyiapkan model 3D&hellip;</p>
+    <div id="loadingBarOuter">
+      <div id="loadingBarFill"></div>
+    </div>
+    <p id="loadingPct">0%</p>
   </div>
 
   <script src="three.min.js"></script>

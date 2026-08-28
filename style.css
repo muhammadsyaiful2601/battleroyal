@@ -190,6 +190,38 @@ html, body {
   font-size: 12px;
   font-weight: bold;
 }
+#grenadeInfo {
+  position: absolute;
+  right: 16px;
+  bottom: 126px;
+  padding: 7px 12px;
+  border-radius: 7px;
+  background: rgba(10, 24, 28, 0.72);
+  color: #9fd771;
+  font-size: 12px;
+  font-weight: bold;
+}
+#grenadeInfo .key-hint { opacity: 0.55; font-weight: normal; }
+
+/* ============================================================
+   SCOPE SNIPER (tahan klik kanan dengan AWM)
+   Lingkaran hitam penuh + garis silang tipis
+   ============================================================ */
+#scopeOverlay { position: absolute; inset: 0; display: none; pointer-events: none; }
+#scopeOverlay.visible { display: block; }
+#scopeOverlay::before {
+  content: '';
+  position: absolute;
+  left: 50%; top: 50%;
+  width: min(82vh, 82vw); height: min(82vh, 82vw);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 3px solid #000;
+  box-shadow: 0 0 0 300vmax rgba(0, 0, 0, 0.88), inset 0 0 40px rgba(0,0,0,0.6);
+}
+.scope-line-h, .scope-line-v { position: absolute; background: rgba(0, 0, 0, 0.85); }
+.scope-line-h { left: 50%; top: 50%; width: min(82vh, 82vw); height: 1.5px; transform: translate(-50%, -50%); }
+.scope-line-v { left: 50%; top: 50%; width: 1.5px; height: min(82vh, 82vw); transform: translate(-50%, -50%); }
 #weaponName { font-size: 13px; font-weight: bold; }
 #ammoText   { font-size: 18px; color: #ffcc00; font-weight: bold; }
 
@@ -340,6 +372,27 @@ html, body {
   transition: transform 0.15s;
 }
 #btnStart:hover, #btnRestart:hover { transform: scale(1.05); }
+
+/* ============================================================
+   LOADING SCREEN (memuat asset sebelum game dimulai)
+   ============================================================ */
+#loadingScreen { z-index: 60; }
+#loadingBarOuter {
+  width: min(360px, 80vw);
+  height: 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+#loadingBarFill {
+  width: 0%;
+  height: 100%;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #ffcc00, #ff8c00);
+  transition: width 0.15s ease-out;
+}
+#loadingPct { font-size: 14px; opacity: 0.8; }
 
 @keyframes killFade {
   0%   { opacity: 1; }
