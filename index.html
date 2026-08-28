@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <!-- viewport-fit=cover : konten menembus notch pada layar mobile -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>HTML5 Canvas Battle Royale (Offline)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ==========================================================
+       CANVAS UTAMA
+       Dirender fullscreen oleh CSS (position:fixed, inset:0)
+       Ukuran piksel diatur dinamis oleh game.js (resize handler)
+       ========================================================== -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- ==========================================================
+       OVERLAY HUD (HTML absolut di atas canvas)
+       Diperbarui secara live oleh game.js melalui updateHUD()
+       ========================================================== -->
+  <div id="hud">
+
+    <!-- Kill Feed : notifikasi eliminasi, pojok kiri atas -->
+    <div id="killFeed"></div>
+
+    <!-- Alive Counter : pojok kanan atas -->
+    <div id="aliveCounter">
+      ALIVE: <span id="aliveNum">1</span> / <span id="totalNum">1</span>
+    </div>
+
+    <!-- HP Bar : pojok kiri bawah. Warna diubah via class CSS -->
+    <div id="hpContainer">
+      <div id="hpText">100 HP</div>
+      <div id="hpBarOuter">
+        <div id="hpBarFill"></div>
+      </div>
+    </div>
+
+    <!-- Indikator senjata & amunisi : pojok kanan bawah -->
+    <div id="weaponInfo">
+      <div id="weaponName">Tangan Kosong</div>
+      <div id="ammoText">- / -</div>
+    </div>
+
+    <div id="medkitInfo">MEDKIT: <span id="medkitNum">0</span></div>
+
+    <!-- Minimap (radar) 2D overlay — di bawah alive counter -->
+    <canvas id="minimap" width="150" height="150"></canvas>
+
+    <!-- Crosshair bidikan di tengah layar -->
+    <div id="crosshair"></div>
+
+  </div>
+
+  <!-- ==========================================================
+       KONTROL MOBILE (Virtual Joystick + Tombol Aksi)
+       Disembunyikan secara default, ditampilkan oleh game.js
+       jika perangkat mendukung touch (isMobile).
+       ========================================================== -->
+  <div id="mobileControls">
+
+    <!-- Joystick analog kiri : area sentuh untuk pergerakan 360° -->
+    <div id="joystickZone">
+      <div id="joystickBase">
+        <div id="joystickKnob"></div>
+      </div>
+    </div>
+
+    <!-- Tombol aksi kanan -->
+    <div id="actionButtons">
+      <button id="btnFire"      class="btn-action btn-fire">FIRE</button>
+      <button id="btnReload"    class="btn-action">RELOAD</button>
+      <button id="btnMedkit"    class="btn-action">MEDKIT</button>
+      <button id="btnInteract"  class="btn-action">PICK UP</button>
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       OVERLAY PERINGATAN ORIENTASI
+       Ditampilkan via CSS media query jika portrait di mobile.
+       ========================================================== -->
+  <div id="rotateWarning">
+    <div class="rotate-icon">📱&#10142;</div>
+    <p>Harap putar perangkat Anda ke <strong>Landscape</strong></p>
+  </div>
+
+  <!-- ==========================================================
+       OVERLAY MENU UTAMA & GAME OVER
+       ========================================================== -->
+  <div id="mainMenu" class="screen-overlay">
+    <h1>BATTLE ROYALE</h1>
+    <p class="subtitle">Offline &middot; HTML5 Canvas</p>
+    <div class="tutorial">
+      <strong>CARA BERMAIN (3D)</strong>
+      <span>W A S D: Bergerak (relatif kamera)</span>
+      <span>Klik canvas: kunci mouse &middot; gerakkan mouse untuk membidik</span>
+      <span>Klik kiri: Tembak &middot; R: Reload &middot; E: Ambil loot &middot; F: Medkit</span>
+      <span>Mobile: Joystick &middot; FIRE &middot; RELOAD &middot; MEDKIT</span>
+    </div>
+    <label for="botCount">Jumlah Bot Musuh:</label>
+    <select id="botCount">
+      <option value="10">10 Bot</option>
+      <option value="15" selected>15 Bot</option>
+      <option value="20">20 Bot</option>
+    </select>
+    <button id="btnStart">START GAME</button>
+  </div>
+
+  <div id="gameOverScreen" class="screen-overlay hidden">
+    <h1 id="gameOverTitle">DEFEATED</h1>
+    <p id="gameOverDetail"></p>
+    <button id="btnRestart">MAIN LAGI</button>
+  </div>
+
+  <script src="three.min.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
